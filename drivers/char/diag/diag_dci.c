@@ -870,9 +870,9 @@ int diag_process_dci_transaction(unsigned char *buf, int len)
 		return DIAG_DCI_SEND_DATA_FAIL;
 	}
 
-	if (!temp) {
-		pr_err("diag: Invalid buffer in %s\n", __func__);
-		return -ENOMEM;
+	if (!temp || len < sizeof(int)) {
+		pr_err("diag: Invalid input in %s\n", __func__);
+		return -EINVAL;
 	}
 
 	/* This is Pkt request/response transaction */
@@ -974,7 +974,7 @@ int diag_process_dci_transaction(unsigned char *buf, int len)
 		pr_debug("diag: head of dci log mask %p\n", head_log_mask_ptr);
 		count = 0; /* iterator for extracting log codes */
 		while (count < num_codes) {
-			if (read_len >= USER_SPACE_DATA) {
+			if (read_len + sizeof(uint16_t) > len) {
 				pr_err("diag: dci: Invalid length for log type in %s",
 								__func__);
 				return -EIO;
@@ -1072,7 +1072,7 @@ int diag_process_dci_transaction(unsigned char *buf, int len)
 		pr_debug("diag: head of dci event mask %p\n", event_mask_ptr);
 		count = 0; /* iterator for extracting log codes */
 		while (count < num_codes) {
-			if (read_len >= USER_SPACE_DATA) {
+			if (read_len + sizeof(int) > len) {
 				pr_err("diag: dci: Invalid length for event type in %s",
 								__func__);
 				return -EIO;
